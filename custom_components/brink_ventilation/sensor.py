@@ -32,20 +32,6 @@ SENSOR_TYPES = {
         "icon": "mdi:molecule-co2",
         "patterns": ["PPM eBus CO2-sensor", "PPM CO2-sensor", "CO2-sensor"],
     },
-    "temperature": {
-        "device_class": SensorDeviceClass.TEMPERATURE,
-        "state_class": SensorStateClass.MEASUREMENT,
-        "unit": UnitOfTemperature.CELSIUS,
-        "icon": "mdi:thermometer",
-        "patterns": ["temperatur", "Frischlufttemperatur", "Zulufttemperatur"],
-    },
-    "humidity": {
-        "device_class": SensorDeviceClass.HUMIDITY,
-        "state_class": SensorStateClass.MEASUREMENT,
-        "unit": "%",
-        "icon": "mdi:water-percent",
-        "patterns": ["Feuchte", "humidity"],
-    },
 }
 
 

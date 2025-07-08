@@ -151,16 +151,6 @@ class BrinkHomeCloud:
             if "PPM eBus CO2-sensor" in param_name or "PPM CO2-sensor" in param_name:
                 _LOGGER.debug(f"Found CO2 sensor: {param_name}")
                 description_result[param_name] = self.__get_type(param)
-                
-            # Add temperature sensors
-            elif "temperatur" in param_name.lower():
-                _LOGGER.debug(f"Found temperature sensor: {param_name}")
-                description_result[param_name] = self.__get_type(param)
-                
-            # Add humidity sensors
-            elif "feuchte" in param_name.lower():
-                _LOGGER.debug(f"Found humidity sensor: {param_name}")
-                description_result[param_name] = self.__get_type(param)
 
         _LOGGER.debug(
             "get_description_values result: %s",
