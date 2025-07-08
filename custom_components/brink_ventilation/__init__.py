@@ -108,8 +108,7 @@ async def async_get_devices(hass: HomeAssistant, entry: ConfigEntry, brink_clien
         
         # Add any additional sensors (CO2, temperature, humidity, etc.)
         for key, value in description.items():
-            if key not in ["ventilation", "mode", "filters_need_change"]:
-                system[key] = value
+            system[key] = value
 
     hass.data[DOMAIN][entry.entry_id][DATA_DEVICES] = systems
 
