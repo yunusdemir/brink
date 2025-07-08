@@ -34,7 +34,7 @@ class BrinkHomeCloud:
             "%s request: %s, data %s",
             method,
             url,
-            data
+            data,
         )
         try:
             async with async_timeout.timeout(self.timeout):
@@ -42,7 +42,7 @@ class BrinkHomeCloud:
                     method,
                     url,
                     json=data,
-                    headers=self.headers
+                    headers=self.headers,
                 )
 
             if req.status == 401:
@@ -75,7 +75,7 @@ class BrinkHomeCloud:
 
         _LOGGER.debug(
             "login result: %s",
-            result
+            result,
         )
 
         return result
@@ -90,62 +90,67 @@ class BrinkHomeCloud:
         mapped_result = []
 
         for system in result:
-            mapped_result.append({
-                'system_id': system["id"],
-                'gateway_id': system["gatewayId"],
-                'name': system['name']
-        })
+            mapped_result.append(
+                {
+                    'system_id': system["id"],
+                    'gateway_id': system["gatewayId"],
+                    'name': system['name']
+                },
+            )
 
         _LOGGER.debug(
             "get_systems result: %s",
-            mapped_result
+            mapped_result,
         )
 
         return mapped_result
 
     async def get_description_values(self, system_id, gateway_id):
         """Gets values info."""
-        url = f"{API_URL}GetAppGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}"
+        url = (f"{API_URL}GetAppGuiDescriptionForGateway?GatewayId="
+               f"{gateway_id}&SystemId={system_id}")
 
         response = await self._api_call(url, "GET")
         result = await response.json()
 
         _LOGGER.debug(
             "Response result: %s",
-            result
+            result,
         )
-        
+
         menu_items = result.get("menuItems", [])
         if not menu_items:
             _LOGGER.debug("No menu items found in API response")
             return {}
-            
+
         menu_item = menu_items[0]
         pages = menu_item.get("pages", [])
         if not pages:
             _LOGGER.debug("No pages found in menu item")
             return {}
-            
+
         # Extract all parameters from all pages
         all_parameters = []
         for page in pages:
             parameters = page.get("parameterDescriptors", [])
             all_parameters.extend(parameters)
-            
+
         _LOGGER.debug(f"Found {len(all_parameters)} parameters across all pages")
 
         # Find the basic parameters
         ventilation = self.__find(all_parameters, "uiId", "Lüftungsstufe")
         mode = self.__find(all_parameters, "uiId", "Betriebsart")
-        filters_need_change = self.__find(all_parameters, "uiId", "Status Filtermeldung")
-        
+        filters_need_change = self.__find(
+            all_parameters, "uiId", "Status Filtermeldung",
+        )
+
         # Initialize the result dictionary with the basic parameters
         description_result = {
             "ventilation": self.__get_type(ventilation),
             "mode": self.__get_type(mode),
             "filters_need_change": self.__get_type(filters_need_change)
         }
-        
+
         # Look for CO2 sensors and other sensors and add them to the result
         for param in all_parameters:
             param_name = param.get("name", "")
@@ -157,7 +162,7 @@ class BrinkHomeCloud:
 
         _LOGGER.debug(
             "get_description_values result: %s",
-            description_result
+            description_result,
         )
 
         return description_result
@@ -176,15 +181,21 @@ class BrinkHomeCloud:
         extracted = []
         for value in values:
             if value["isSelectable"]:
-                extracted.append({
-                    "value": value["value"],
-                    "text": TRANSLATIONS.get(value["displayText"], value["displayText"])
-                })
+                extracted.append(
+                    {
+                        "value": value["value"],
+                        "text": TRANSLATIONS.get(
+                            value["displayText"], value["displayText"],
+                        )
+                    },
+                )
 
         return extracted
 
     # 1 as mode value changes mode to manual every time you change ventilation value
-    async def set_ventilation_value(self, system_id, gateway_id, mode, ventilation, value):
+    async def set_ventilation_value(
+        self, system_id, gateway_id, mode, ventilation, value,
+    ):
         ventilation_value = ventilation["values"][value]["value"]
         if ventilation_value is None:
             return
@@ -230,7 +241,7 @@ class BrinkHomeCloud:
 
         await self._api_call(url, "POST", data)
 
-    def __find(self, arr , attr, value):
+    def __find(self, arr, attr, value):
         for obj in arr:
             try:
                 if obj[attr] == value:
@@ -238,6 +249,5 @@ class BrinkHomeCloud:
             except:
                 _LOGGER.debug(
                     "find error: %s",
-                    value
+                    value,
                 )
-
