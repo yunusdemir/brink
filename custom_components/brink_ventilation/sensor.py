@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+import re
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, UnitOfTemperature
+from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION
 from homeassistant.core import HomeAssistant
 
 from custom_components.brink_ventilation import BrinkHomeDeviceEntity
@@ -30,7 +30,7 @@ SENSOR_TYPES = {
         "state_class": SensorStateClass.MEASUREMENT,
         "unit": CONCENTRATION_PARTS_PER_MILLION,
         "icon": "mdi:molecule-co2",
-        "patterns": ["PPM eBus CO2-sensor", "PPM CO2-sensor", "CO2-sensor"],
+        "pattern": r"(?=.*\bPPM\b)(?=.*\bCO2\b)",
     },
 }
 
@@ -52,44 +52,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             if isinstance(value, dict) and "name" in value and "value" in value:
                 # Check if the key matches any of our sensor patterns
                 for sensor_type, properties in SENSOR_TYPES.items():
-                    for pattern in properties["patterns"]:
-                        if pattern.lower() in key.lower():
-                            _LOGGER.debug(f"Found {sensor_type} sensor by key: {key}")
-                            entities.append(
-                                BrinkSensor(
-                                    client,
-                                    coordinator,
-                                    device_index,
-                                    key,
-                                    value["name"],
-                                    properties["device_class"],
-                                    properties["state_class"],
-                                    properties["unit"],
-                                    properties["icon"]
-                                )
+                    if re.search(properties["pattern"], key):
+                        _LOGGER.debug(f"Found {sensor_type} sensor by key: {key}")
+                        entities.append(
+                            BrinkSensor(
+                                client,
+                                coordinator,
+                                device_index,
+                                key,
+                                value["name"],
+                                properties["device_class"],
+                                properties["state_class"],
+                                properties["unit"],
+                                properties["icon"]
                             )
+                        )
             
                 # Also check the name field in the value dict as before
                 sensor_name = value.get("name", "")
                 _LOGGER.debug(f"Checking potential sensor: {sensor_name}")
                 
                 for sensor_type, properties in SENSOR_TYPES.items():
-                    for pattern in properties["patterns"]:
-                        if pattern.lower() in sensor_name.lower():
-                            _LOGGER.debug(f"Found {sensor_type} sensor by name: {sensor_name}")
-                            entities.append(
-                                BrinkSensor(
-                                    client,
-                                    coordinator,
-                                    device_index,
-                                    key,
-                                    sensor_name,
-                                    properties["device_class"],
-                                    properties["state_class"],
-                                    properties["unit"],
-                                    properties["icon"]
-                                )
+                    if re.search(properties["pattern"], key):
+                        _LOGGER.debug(f"Found {sensor_type} sensor by name: {sensor_name}")
+                        entities.append(
+                            BrinkSensor(
+                                client,
+                                coordinator,
+                                device_index,
+                                key,
+                                sensor_name,
+                                properties["device_class"],
+                                properties["state_class"],
+                                properties["unit"],
+                                properties["icon"]
                             )
+                        )
 
     if entities:
         _LOGGER.info(f"Adding {len(entities)} sensor entities: {[e.entity_name for e in entities]}")

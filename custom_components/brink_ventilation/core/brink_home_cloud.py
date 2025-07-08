@@ -1,10 +1,13 @@
 """Implementation for Brink-Home Cloud"""
 import asyncio
-import async_timeout
 import logging
+import re
+
 import aiohttp
+import async_timeout
 
 from ..const import API_URL
+from ..sensor import SENSOR_TYPES
 from ..translations import TRANSLATIONS
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,9 +149,9 @@ class BrinkHomeCloud:
         # Look for CO2 sensors and other sensors and add them to the result
         for param in all_parameters:
             param_name = param.get("name", "")
-            
+
             # Add CO2 sensors
-            if "PPM eBus CO2-sensor" in param_name or "PPM CO2-sensor" in param_name:
+            if re.search(SENSOR_TYPES.get("co2").pattern, param_name):
                 _LOGGER.debug(f"Found CO2 sensor: {param_name}")
                 description_result[param_name] = self.__get_type(param)
 
